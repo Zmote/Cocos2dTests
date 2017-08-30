@@ -7,10 +7,12 @@ class HelloWorld : public cocos2d::Layer
 {
 public:
 	Node * rootNodePtr;
-	Node * sprite1;
+	cocos2d::Sprite * sprite1;
 	cocos2d::experimental::TMXTiledMap * background;
+	cocos2d::Vector<cocos2d::SpriteFrame*> animFrames;
 	enum ARROWS{LEFT, TOP, RIGHT, DOWN};
 	bool arrow_states[4];
+
 	// there's no 'id' in cpp, so we recommend returning the class instance pointer
     static cocos2d::Scene* createScene();
 	void keyPressed(cocos2d::EventKeyboard::KeyCode keyCode, cocos2d::Event * event);
