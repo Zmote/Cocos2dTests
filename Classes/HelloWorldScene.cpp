@@ -32,6 +32,7 @@ bool HelloWorld::init()
 
 	background = experimental::TMXTiledMap::create("racetrack_map.tmx");
 	background->setScale(2, 2);
+	background->setPosition(-650.00, 500.00);
 
 	addChild(background);
 	
@@ -63,22 +64,18 @@ void HelloWorld::update(float delta)
 	{
 		if(background->getPositionX() > visibleSize.width/2)
 		{
-			log("REACHED LEFT LIMIT");
 			canMove[LEFT] = false;
 		}
 		if(background->getPositionX() <= -visibleSize.width)
 		{
-			log("REACHED RIGHT LIMIT");
 			canMove[RIGHT] = false;
 		}
 		if(background->getPositionY() > visibleSize.height/2)
 		{
-			log("REACHED DOWN LIMIT");
 			canMove[DOWN] = false;
 		}
 		if(background->getPositionY() <= -visibleSize.height)
 		{
-			log("REACHED TOP LIMIT");
 			canMove[TOP] = false;
 		}
 	}
