@@ -6,10 +6,10 @@
 class HelloWorld : public cocos2d::Layer
 {
 public:
-	Node * rootNodePtr;
 	cocos2d::Sprite * sprite1;
 	cocos2d::experimental::TMXTiledMap * background;
 	cocos2d::Vector<cocos2d::SpriteFrame*> animFrames;
+	cocos2d::Rect finishLineRectangle;
 	enum ARROWS{LEFT, TOP, RIGHT, DOWN};
 	bool arrow_states[4];
 

@@ -1,6 +1,8 @@
 #include "HelloWorldScene.h"
 #include "cocostudio/CocoStudio.h"
 #include "ui/CocosGUI.h"
+#include <winuser.h>
+#include <winuser.h>
 
 USING_NS_CC;
 
@@ -27,21 +29,24 @@ bool HelloWorld::init()
         return false;
     }
     
-	Size visibleSize = Director::getInstance()->getVisibleSize();
 	Vec2 origin = Director::getInstance()->getVisibleOrigin();
 
 	background = experimental::TMXTiledMap::create("racetrack_map.tmx");
 	background->setScale(2, 2);
-	background->setPosition(-650.00, 500.00);
-
+	
 	addChild(background);
 
+	auto spawnPoint = background->getObjectGroup("Objects")->getObject("SpawnPoint");
+	
 	sprite1 = Sprite::create("portrait001.png");
-	sprite1->setPosition(visibleSize.width / 2 + origin.x, visibleSize.height / 2 + origin.y);
+	auto xPos = 2 * spawnPoint["x"].asFloat();
+	auto yPos = 2 * spawnPoint["y"].asFloat();
+	auto height = spawnPoint["height"].asFloat();
+	auto width = spawnPoint["width"].asFloat();
+	sprite1->setPosition(Vec2(xPos + width, yPos + height));
 	sprite1->setScale(0.2f, 0.2f);
 	
 	addChild(sprite1);
-
 
 	auto sprite1Width = sprite1->getContentSize().width;
 	auto sprite1Height = sprite1->getContentSize().height;
@@ -49,6 +54,10 @@ bool HelloWorld::init()
 
 	animFrames.pushBack(SpriteFrame::create("portrait001.png", sprite1Rect));
 	animFrames.pushBack(SpriteFrame::create("portrait002.png", sprite1Rect));
+
+	auto finishLineObject = background->getObjectGroup("Objects")->getObject("finishLine");
+	finishLineRectangle = Rect{ 2 * finishLineObject["x"].asFloat(), 2 * finishLineObject["y"].asFloat(),
+		2 * finishLineObject["width"].asFloat(),2 * finishLineObject["height"].asFloat() };
 
 	auto eventListener = EventListenerKeyboard::create();
 	auto eventReleaseListener = EventListenerKeyboard::create();
@@ -59,50 +68,56 @@ bool HelloWorld::init()
 	this->getEventDispatcher()->addEventListenerWithSceneGraphPriority(eventReleaseListener, this);
 
 	this->scheduleUpdate();
+	this->runAction(Follow::create(sprite1));
     return true;
 }
 
 void HelloWorld::update(float delta)
 {
-	//BOUNDARIES without using physics, map movement as character movement
-	Size visibleSize = Director::getInstance()->getVisibleSize();
+	//BOUNDARIES without using physics
 	bool canMove[4] = {true,true,true,true};
-
+	
 	if(!background->getBoundingBox().containsPoint(sprite1->getPosition()))
 	{
-		if(background->getPositionX() > visibleSize.width/2)
+		if (sprite1->getPositionX() <= background->getPositionX())
 		{
 			canMove[LEFT] = false;
 		}
-		if(background->getPositionX() <= -visibleSize.width)
+		if (sprite1->getPositionX() >= background->getPositionX() + 2 * background->getContentSize().width)
 		{
 			canMove[RIGHT] = false;
 		}
-		if(background->getPositionY() > visibleSize.height/2)
+		if (sprite1->getPositionY() <= background->getPositionY())
 		{
 			canMove[DOWN] = false;
 		}
-		if(background->getPositionY() <= -visibleSize.height)
+		if (sprite1->getPositionY() >= background->getPositionY() + 2 * background->getContentSize().height)
 		{
 			canMove[TOP] = false;
 		}
 	}
 
+	auto multiplyFactorDelta = 1 + delta;
 	if (arrow_states[LEFT] && canMove[LEFT])
 	{
-		background->runAction(MoveBy::create(0, Vec2(10, 0)));
+		sprite1->runAction(MoveBy::create(0, Vec2(multiplyFactorDelta * -10, 0)));
 	}
 	if (arrow_states[RIGHT] && canMove[RIGHT])
 	{
-		background->runAction(MoveBy::create(0, Vec2(-10, 0)));
+		sprite1->runAction(MoveBy::create(0, Vec2(multiplyFactorDelta * 10, 0)));
 	}
 	if (arrow_states[TOP] && canMove[TOP])
 	{
-		background->runAction(MoveBy::create(0, Vec2(0, -10)));
+		sprite1->runAction(MoveBy::create(0, Vec2(0, multiplyFactorDelta * 10)));
 	}
 	if (arrow_states[DOWN] && canMove[DOWN])
 	{
-		background->runAction(MoveBy::create(0, Vec2(0, 10)));
+		sprite1->runAction(MoveBy::create(0, Vec2(0, multiplyFactorDelta * -10)));
+	}
+	
+	if(finishLineRectangle.containsPoint(sprite1->getPosition()))
+	{
+		MessageBox("Yay, you reached the finish line", "You win!");
 	}
 }
 
@@ -112,6 +127,7 @@ void HelloWorld::keyPressed(EventKeyboard::KeyCode keyCode, Event* event)
 	if (keyCode == EventKeyboard::KeyCode::KEY_LEFT_ARROW) arrow_states[LEFT] = true;
 	if (keyCode == EventKeyboard::KeyCode::KEY_UP_ARROW) arrow_states[TOP] = true;
 	if (keyCode == EventKeyboard::KeyCode::KEY_DOWN_ARROW) arrow_states[DOWN] = true;
+
 	if(arrow_states[LEFT] || arrow_states[TOP] || arrow_states[RIGHT] || arrow_states[DOWN])
 	{
 		auto actionCount = sprite1->getActionManager()->getNumberOfRunningActionsInTarget(sprite1);
@@ -131,6 +147,7 @@ void HelloWorld::keyReleased(EventKeyboard::KeyCode keyCode, Event* event)
 	if (keyCode == EventKeyboard::KeyCode::KEY_LEFT_ARROW) arrow_states[LEFT] = false;
 	if (keyCode == EventKeyboard::KeyCode::KEY_UP_ARROW) arrow_states[TOP] = false;
 	if (keyCode == EventKeyboard::KeyCode::KEY_DOWN_ARROW) arrow_states[DOWN] = false;
+
 	if(!(arrow_states[LEFT] || arrow_states[TOP] || arrow_states[RIGHT] || arrow_states[DOWN]))
 	{
 		sprite1->stopAllActions();
@@ -138,7 +155,7 @@ void HelloWorld::keyReleased(EventKeyboard::KeyCode keyCode, Event* event)
 	}
 }
 
-void HelloWorld::setPhysicsWorld(cocos2d::PhysicsWorld* world)
+void HelloWorld::setPhysicsWorld(PhysicsWorld* world)
 {
 	this->sceneWorld = world;
 }
