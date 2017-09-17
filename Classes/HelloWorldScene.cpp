@@ -83,6 +83,13 @@ bool HelloWorld::init()
 
 	this->scheduleUpdate();
 	this->runAction(Follow::create(sprite1));
+	//TODO: Add start menu
+	//TODO: Add sound effects
+	//TODO: Add game end menu/overlay
+	//TODO: Add 1,2,3 Start sequence
+	//TODO: Add Level 2
+	//TODO: Add user stats, Level highscores, persistence
+	//TODO: refactor code
     return true;
 }
 
